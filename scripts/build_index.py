@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 GH = "https://github.com/rfs151"
 # repo dir -> project id (same ids as the homepage cards)
 REPOS = {"ai-vision": "vision", "ai-qt": "qt", "ai-ems": "ems", "ai-cam": "cam",
-         "ai-gvtest": "gvtest", "ai-medlens": "medlens", "ai-scada": "scada", "ai-agent": "agent"}
+         "ai-gvtest": "gvtest", "ai-medlens": "medlens", "ai-agent": "agent"}
 MAX_CHARS = 1800
 KNOW = Path(__file__).resolve().parent.parent / "knowledge"
 OUT = KNOW / "index.json"

@@ -1,4 +1,4 @@
-# 作品集项目（作品集首页 http://47.117.29.74/ 的 7 个在线演示 + 本助手）
+# 作品集项目（作品集首页 http://47.117.29.74/ 的 6 个在线演示 + 本助手）
 
 演示地址只用下面写的 IP 地址（域名 edgebot.vip 没有备案，打不开）。
 
@@ -34,11 +34,6 @@
 - 演示：http://47.117.29.74:8010/ ；源码：https://github.com/rfs151/ai-medlens
 - 5 类医疗影像（X 光、血细胞、脑 MRI、口腔全景片、结肠镜）各用一个公开预训练模型，支持上传本地文件和 DICOM；血细胞计数可与传统 OpenCV 算法对比；Python 和 C++ 双后端可切换对比延迟；脑 MRI 支持 3D 体渲染和三视图，同一套 C++/OpenGL 代码编译成桌面程序和 WebAssembly。仅供技术演示。
 - 技术栈：YOLO11、ONNX Runtime、C++ Drogon、DICOM、OpenGL/WebGL2、WebAssembly。
-
-## scada · PowerGrid SCADA
-- 演示：http://47.117.29.74:8088/ ；源码：https://github.com/rfs151/ai-scada
-- 电力监控系统，110kV 变电站潮流计算仿真，IEC 60870-5-104 规约接入，走通"厂站 → 前置 → SCADA → 人机界面"全链路：一次接线图、告警与 SOE、遥控与五防、事故追忆、负荷预测。
-- 技术栈：Python、IEC 104、TimescaleDB、Redis、FastAPI、Vue。
 
 ## agent · 作品集 AI 助手（就是你自己）
 - 首页右侧的问答助手；源码：https://github.com/rfs151/ai-agent

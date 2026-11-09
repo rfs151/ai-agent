@@ -116,7 +116,7 @@
 "source": "writeup",
 "title": "储能 EMS 边缘网关 · 项目说明 > 关键数据",
 "url": "https://github.com/rfs151/ai-ems",
-"text": "- 144 项单元测试（控制算法 91、点位编解码 23、规则 30），可在 ASan / UBSan 下运行；mFRR 轨迹、叠加交接、FCR/LFSM-O 曲线用表驱动测试覆盖。\n- 云端下发指令往返约 50 ms（本机实测）。\n- 技术栈：C99、pthread、libmodbus、SQLite WAL、libmosquitto（MQTT TLS）、TinyExpr、lib60870-C（IEC 104 子站，可接入 ai-scada）、OpenSSL RSA-2048 + SHA256 固件验签、FastAPI、Vue。",
+"text": "- 144 项单元测试（控制算法 91、点位编解码 23、规则 30），可在 ASan / UBSan 下运行；mFRR 轨迹、叠加交接、FCR/LFSM-O 曲线用表驱动测试覆盖。\n- 云端下发指令往返约 50 ms（本机实测）。\n- 技术栈：C99、pthread、libmodbus、SQLite WAL、libmosquitto（MQTT TLS）、TinyExpr、lib60870-C（IEC 104 子站）、OpenSSL RSA-2048 + SHA256 固件验签、FastAPI、Vue。",
 "part": 0
 },
 {
@@ -229,46 +229,6 @@
 "title": "Qt 网络拓扑监控上位机（Qt 6 · WebAssembly）· 项目说明 > 工程与部署",
 "url": "https://github.com/rfs151/ai-qt",
 "text": "- 多阶段 Dockerfile（emsdk 3.1.56 + Qt 6.8.3 → 编译 → nginx），wasm 预压缩 15 MB → 5.7 MB；本机构建后 docker save | ssh docker load 传到服务器，服务器不需要 Qt 工具链。\n- 测试：tst_comm 覆盖 CRC、解析器异常输入、环形缓冲、降采样、跨线程投递、重发超时、断线重连和真实 devsim 进程的 TCP 端到端；tst_history 覆盖聚合、SQL 聚合保峰值、过期清理、跨线程写入后重启可查。qmllint 零警告。\n- 技术栈：C++17、Qt 6 Graphics View、Qt Quick/QML、QThread、Modbus、SQLite、WebAssembly、CMake。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "writeup",
-"title": "PowerGrid SCADA 电力监控系统 · 项目说明 > 概况",
-"url": "https://github.com/rfs151/ai-scada",
-"text": "- 个人作品集项目，由我一个人完成。演示：http://47.117.29.74:8088/ ；源码：https://github.com/rfs151/ai-scada\n- 做什么：用潮流计算仿真一座 110kV 变电站，经 IEC 60870-5-104 规约接入主站，走通\"厂站 RTU → 通道 → 前置 FEP → SCADA → 人机界面\"真实链路：一次接线图拓扑着色、告警与 SOE、遥控（五防 + 选择-返校-执行）、故障注入与继电保护、事故追忆回放、事故简报、运行报表、负荷预测、数据校核。\n- 和我工作经历的关系：延伸我在储能 EMS 里做的工业协议和电网业务；IEC 104 规约栈是我自己实现的。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "writeup",
-"title": "PowerGrid SCADA 电力监控系统 · 项目说明 > 架构",
-"url": "https://github.com/rfs151/ai-scada",
-"text": "- rtu-sim（仿真子站）：pandapower 交流潮流，开关分合真实改变拓扑；保护与自动装置；IEC 104 从站。\n- fep（前置机）：IEC 104 主站，建链、总召、对时、收数、下发遥控；品质处理、变化检测、SOE、报文记录。rtu-sim 和 fep 是两个独立进程，走真实 TCP 104 报文。\n- redis：实时库 + 消息总线（Redis Streams 传变化数据、SOE、遥控命令、仿真控制）。\n- db：TimescaleDB 历史库。api：FastAPI，REST + WebSocket，后台跑告警引擎、数据校核、遥控会话、历史写入、事故追忆。web：Vue 3。gateway：Caddy。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "writeup",
-"title": "PowerGrid SCADA 电力监控系统 · 项目说明 > 高频数据与并发处理",
-"url": "https://github.com/rfs151/ai-scada",
-"text": "- 历史写入：Redis Stream 消费组 + 批量 COPY，写库成功才 ACK（至少一次）。\n- TimescaleDB hypertable、1 分钟连续聚合、3 天后压缩、30 天保留；历史库只存变化，统计前按\"前值保持\"补齐分钟。\n- 推送：按画面订阅、200 ms 合帧、只推增量，避免浏览器被高频变化淹没。\n- 规则引擎消费 Redis 变化流和 SOE 流，越限回差与延时、检修抑制。\n- 数据校核每 2 秒对实时断面计算一次，异常持续 15 秒才告警，避开短路暂态。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "writeup",
-"title": "PowerGrid SCADA 电力监控系统 · 项目说明 > 难点与解决",
-"url": "https://github.com/rfs151/ai-scada",
-"text": "- **自研 IEC 104 规约栈**：APCI I/S/U 帧、15 位序号回绕、k/w 流量控制、t0～t3 定时器；ASDU 单/双点遥信（含 CP56Time2a SOE）、短浮点遥测、电度、遥控、设点、总召、对时；子站 SBO 及超时/撤销、否定确认；主站断线重连、STARTDT → 对时 → 总召 → 电度召唤。与 lib60870-C（c104）做双向互操作测试。\n- **遥控安全**：会话状态机 pending → authorized → selected → done，任一步可撤销，选择后 30 秒超时自动撤销；五防校验 + 监护人确认；PBKDF2 口令 + JWT，全部操作写审计日志。\n- **事故追忆**：保护 / 自动装置动作自动生成追忆，20 秒内的后续动作合并；回放数据 = 触发前 30 秒全站断面 + 窗口内全部遥测变化与 SOE，前端从断面出发逐条应用，接线图重现开关动作。\n- **负荷预测选型**：仿真负荷没有气象、节假日特征，LightGBM 等模型只能学到同一时刻的历史值，所以选了可解释的相似日法（前 7 个仿真日加权平均、剔除偏离中位数 25% 的值、最近 1 小时滚动修正），离线回测约 99%；接口按\"历史序列 → 预测序列\"设计，可替换。\n- **仿真时钟**：60 倍速，对齐本地时间，子站重启后历史数据的仿真钟点不变。\n- **事故简报**：从追忆数据提取事实，按规则定性并给出处置建议；可选由大模型基于同一份事实撰写。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "writeup",
-"title": "PowerGrid SCADA 电力监控系统 · 项目说明 > 关键数据与技术栈",
-"url": "https://github.com/rfs151/ai-scada",
-"text": "- 点表 153 个点，由厂站模型 station.yaml 按规则生成（单一事实来源）；图模分离，layout.test.ts 做图模一致性校验。\n- 技术栈：Python、自研 IEC 104、pandapower、FastAPI、WebSocket、Redis Streams、TimescaleDB、Vue 3、Caddy、Docker Compose。",
 "part": 0
 },
 {
@@ -2528,379 +2488,83 @@
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo",
-"url": "https://github.com/rfs151/ai-scada#powergrid-scada-demo",
-"text": "电力系统 SCADA（数据采集与监视控制）演示系统。用潮流计算仿真一座 110kV 变电站，经 **IEC 60870-5-104** 规约接入主站，完整走通\"厂站 → 通道 → 前置 → SCADA → 人机界面\"的真实链路：采集、实时处理、告警与 SOE、遥控（五防 + 选择-返校-执行）、一次接线图拓扑着色、事故追忆、运行报表，以及数据校核、负荷预测、事故简报等智能分析。\n\n- 在线演示：<http://141.164.45.82:8088>（演示账号见[演示](#演示)，每 60 分钟自动恢复正常运行方式）\n- 设计方案：[docs/开发方案.md](docs/开发方案.md) · 点表：[docs/点表.csv](docs/点表.csv)（153 个点，由厂站模型生成）\n- 进度：P0 骨架 ✅ · P1 数据链路 ✅ · P2 接线图 ✅ · P3 告警/遥控/五防 ✅ · P4 故障场景/事故追忆 ✅ · P5 报表/自动复位/演示 ✅ · P6 数据校核/负荷预测/事故简报 ✅\n\n![演示：接线图 → 故障注入 → 事故追忆回放 → 报文监视](docs/images/demo.gif)\n\n**亮点**\n\n- **自研 IEC 60870-5-104 规约栈**（主站 + 子站）：k/w 流量控制、t0~t3 定时器、SBO 遥控；与 lib60870-C 双向互操作测试\n- **153 个点**的 110kV 变电站：pandapower 潮流仿真，开关分合真实改变拓扑，60 倍速仿真时钟\n- **历史库**：Redis Stream 消费组 + 批量 COPY 写入 TimescaleDB，写库成功才 ACK；3 天后自动压缩、保留 30 天、1 分钟连续聚合\n- **事故追忆**：触发前 30 秒全站断面 + 窗口内全部变化，按 SOE 毫秒时标逐条回放\n- **负荷预测**：相似日加权 + 实测滚动修正，离线回测约 99%\n- **104 个 pytest 用例**，GitHub Actions 跑 ruff、pytest 和前端构建\n\n![接线图](docs/images/diagram.png)\n\n| 故障注入：永久故障后加速跳闸 | 事故追忆：按 SOE 时标逐事件回放 |\n|---|---|\n| ![故障](docs/images/fault.png) | ![PDR](docs/images/pdr.png) |\n| **五防闭锁：防带负荷拉刀闸** | **遥控：选择返校 → 监护 → 执行** |\n| ![五防](docs/images/interlock.png) | ![遥控](docs/images/control.png) |\n| **运行报表：负荷曲线、电压合格率** | **报文监视：IEC 104 实时解析** |\n| ![报表](docs/images/reports.png) | ![报文](docs/images/frames.png) |",
+"title": "ai-agent · 作品集 AI 助手",
+"url": "https://github.com/rfs151/ai-agent#ai-agent--作品集-ai-助手",
+"text": "嵌在作品集首页 <http://47.117.29.74/> 上的问答助手：招聘方可以问我的工作经历、项目和技术细节，贴一段职位描述（JD）会得到逐条匹配报告。它用第一人称回答，讲项目细节时先检索知识库并附上 GitHub 链接，同时在页面上高亮相关的项目卡片；问到演示状态时会查询实时数据。\n\n- **多 Agent + 工作流**：LangGraph 编排，路由 Agent 判断意图，分给问答 Agent、JD 匹配工作流或联系方式\n- **RAG**：每个项目一篇项目说明 + 各项目 README / 设计文档（363 段），BM25 + 向量（bge-small-zh，本地 ONNX）混合检索，RRF 融合\n- **记忆**：LangGraph SQLite checkpointer 按会话保存，长对话自动摘要压缩，记住访客的公司、岗位和关注点\n- 模型 DeepSeek（`deepseek-flash`，OpenAI 兼容接口），全部流式；每个回答都能展开看执行路径、每步耗时、工具调用、token 和费用",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 目录",
-"url": "https://github.com/rfs151/ai-scada#目录",
-"text": "- [项目功能](#项目功能)\n- [演示](#演示)\n- [系统架构](#系统架构)\n- [电力 SCADA 业务知识](#电力-scada-业务知识)\n  - [1. SCADA 是什么：四遥与分层结构](#1-scada-是什么四遥与分层结构)\n  - [2. 变电站一次接线](#2-变电站一次接线)\n  - [3. 倒闸操作与五防](#3-倒闸操作与五防)\n  - [4. 遥控：选择-返校-执行](#4-遥控选择-返校-执行)\n  - [5. IEC 60870-5-104 规约](#5-iec-60870-5-104-规约)\n  - [6. 数据质量：死区、品质位、时标与 SOE](#6-数据质量死区品质位时标与-soe)\n  - [7. 告警分级与越限](#7-告警分级与越限)\n  - [8. 继电保护与站内自动装置](#8-继电保护与站内自动装置)\n  - [9. 拓扑着色](#9-拓扑着色)\n  - [10. 运行指标与智能分析](#10-运行指标与智能分析)\n- [技术要点](#技术要点)\n- [本地开发](#本地开发)\n- [Docker 部署](#docker-部署)\n- [接口](#接口)\n\n---",
+"title": "ai-agent · 作品集 AI 助手 > 架构",
+"url": "https://github.com/rfs151/ai-agent#架构",
+"text": "```\n浏览器（首页 + agent.js）\n   │  POST /agent/api/chat  →  text/event-stream\n   ▼\nCaddy 网关 ── /agent/* ──▶ ai-agent（FastAPI，127.0.0.1:8099）\n                            ├─ LangGraph 状态图（下图） ──▶ DeepSeek API\n                            ├─ 知识库：index.json（切块）+ vectors.npz（512 维向量）+ bge-small-zh（models/）\n                            ├─ data/graph.db：checkpointer，每个会话一个 thread\n                            └─ data/agent.db：每个问题一行，用于回看、限流、每日费用上限\n```",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 项目功能",
-"url": "https://github.com/rfs151/ai-scada#项目功能",
-"text": "| 功能 | 说明 |\n|---|---|\n| **一次接线图** | SVG 自绘：110kV 内桥 + 10kV 单母分段；拓扑着色（带电/失电/接地）、潮流方向动画、实时量测、越限变色、品质灰显、变位闪烁；点击设备看台账、SOE、趋势 |\n| **实时数据** | 全站遥测/遥信列表，按间隔筛选，品质位与时标；趋势曲线（原始值 / 1 分钟聚合自动切换） |\n| **告警** | 事故 / 异常 / 越限 / 变位 / 告知五级；全局告警窗、音响、未确认闪烁、确认；检修挂牌自动抑制；光字牌 |\n| **SOE** | 按设备毫秒时标排序的事件顺序记录 |\n| **遥控 / 遥调** | 五防校验 + 复诵 → 监护人确认 → 选择返校 → 执行，任一步可撤销、超时自动撤销；主变升降档、光伏有功设定；挂牌（检修、禁止合闸、临时接地线） |\n| **故障注入** | 出线瞬时/永久故障、单相接地、进线失电、主变内部故障、电压偏高、通道中断、量测故障（CT 极性接反/变送器卡死/量程错误） |\n| **站内自动装置** | 过流保护、一次重合闸、后加速、主变差动/重瓦斯、两级备自投（时间级差配合） |\n| **事故追忆（PDR）** | 事故自动生成追忆，从事故前 30 秒全站断面开始按 SOE 时标逐事件回放，接线图重现开关动作 |\n| **事故简报** | 从追忆数据提取事实，按规则定性并给出处置建议；可选由大模型基于同一份事实撰写 |\n| **运行报表** | 负荷曲线与负荷特性、电压合格率、主变与出线统计、告警与操作统计；导出 Excel |\n| **负荷预测** | 相似日法预测未来 1 个仿真日的 10kV 负荷，上一日回测准确率 |\n| **数据校核** | 节点功率平衡 + 间隔自洽，发现坏数据并定位到间隔 |\n| **报文监视** | IEC 104 报文实时解析：APCI、ASDU、品质、时标 |\n| **审计 / 权限** | 访客只读、调度员、监护员、管理员；登录、遥控每一步、挂牌、告警确认、场景注入全部留痕 |\n| **系统状态** | 各服务、104 通道（收发帧数、总召、对时）、实时推送延迟 |\n| **自动复位** | 公开演示站定时恢复正常运行方式（有人操作时推迟） |",
+"title": "ai-agent · 作品集 AI 助手 > 状态图",
+"url": "https://github.com/rfs151/ai-agent#状态图",
+"text": "```mermaid\ngraph TD\n  START --> memory[记忆：长对话压缩成摘要]\n  memory --> router{路由 Agent<br>意图 + 访客信息}\n  router -- qa --> qa[问答 Agent<br>工具调用循环]\n  router -- jd --> parse[JD 拆解]\n  router -- contact --> contact[联系方式<br>不调用模型]\n  parse --> evidence[逐条检索证据<br>并行，不调用模型]\n  parse -. 没拆出要求 .-> qa\n  evidence --> score[逐条打分 0～3<br>引用证据编号]\n  score --> report[匹配报告<br>表格由代码生成，模型写差距和总结]\n  qa --> finish[保存会话]\n  report --> finish\n  contact --> finish\n  finish --> END\n```\n\n`GET /agent/api/graph` 返回 LangGraph 生成的同一张图（Mermaid）。\n\n| 节点 | 模型调用 | 做什么 |\n|---|---|---|\n| memory | 需要时 1 次 | 消息超过 `KEEP_MESSAGES`×2 条或 `SUMMARIZE_CHARS` 字时，把较早的消息压缩成摘要，只保留最近 `KEEP_MESSAGES` 条 |\n| router | 1 次（JSON 模式） | 意图 qa / jd / contact；从消息里记下公司、岗位、关注点（没说的不猜） |\n| qa_agent | 1～5 次 | 工具调用循环：`search_docs`、`get_project_status`、`get_vision_live`、`highlight_projects`；最后一步不给工具 |\n| jd_parse | 1 次（JSON） | 拆成最多 8 条要求，标必须 / 加分，给出检索词 |\n| jd_evidence | 0 | 每条要求并行混合检索 3 段，证据去重编号 E1、E2… |\n| jd_score | 1 次（JSON） | 结合简历和证据逐条打分，只能引用给定的证据编号 |\n| jd_report | 1 次 | 匹配度 = Σ 权重×分 / Σ 权重×3（必须 2，加分 1）；表格和证据链接由代码生成，模型只写\"差距\"和\"总结\" |\n| contact | 0 | 给电话和邮箱（留言暂不开放） |\n| finish | 0 | 把这一轮追加到历史；JD 只存拆解后的要求，不存原文 |",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 演示",
-"url": "https://github.com/rfs151/ai-scada#演示",
-"text": "演示账号（`DEMO_MODE=true` 时登录框会列出），口令都是 `scada@2024`：\n\n| 账号 | 姓名 | 角色 | 权限 |\n|---|---|---|---|\n| `zhang` / `li` | 张工 / 李工 | 调度员（operator） | 遥控遥调、挂牌、确认告警、故障注入 |\n| `wang` | 王工 | 监护员（supervisor） | 遥控监护确认、审计查看，以及调度员权限 |\n| `admin` | 系统管理员 | 管理员 | 审计查看、故障注入 |\n| — | — | 访客（未登录） | 只读 |\n\n5 分钟演示路线（与 `scripts/demo/record.mjs` 自动录制的视频一致）：\n\n1. **接线图**：拓扑着色、潮流方向、实时量测\n2. **登录 → 故障注入「出线永久故障」**：保护跳闸 → 重合 → 后加速再跳；告警窗事故音响，线路失电变灰\n3. **点通知「回放」**：事故追忆按 SOE 毫秒时标单步重放；右上角「事故简报」查看自动生成的简报\n4. **「消除故障」后遥控**：先试拉 1016 刀闸被五防闭锁，再对 912 合闸（复诵 → 监护 → 选择返校 → 执行）恢复送电\n5. **确认告警**；报表页看负荷曲线、负荷预测，导出 Excel；报文监视看 104 报文解析\n6. （可选）注入「CT 极性接反」，到系统状态页看数据校核定位到该间隔\n\n录制演示视频与截图：\n\n```bash\ncd scripts/demo && npm i && npx playwright install chromium\nnode record.mjs http://127.0.0.1:18088   # 输出 out/demo.mp4 与 docs/images/*.png\n```",
+"title": "ai-agent · 作品集 AI 助手 > RAG 知识库",
+"url": "https://github.com/rfs151/ai-agent#rag-知识库",
+"text": "| | |\n|---|---|\n| 内容 | `knowledge/projects/<id>.md`：我写的项目说明（架构、难点、我的贡献、并发与性能、关键数据），加各项目 README 和 `docs/*.md` |\n| 切块 | 按 `##` / `###` 标题，超过 1800 字按段落再切；文档块链接到 GitHub 对应标题 |\n| 关键词 | BM25，中文两字切分（不需要分词库），标题词权重 ×3 |\n| 向量 | `BAAI/bge-small-zh-v1.5`（fastembed，ONNX Runtime，CPU），文档向量离线算好，查询向量化约 5 ms；余弦低于 0.45 的不要 |\n| 融合 | RRF：每路取前 20，分数 = Σ 1/(60 + 名次)，不用调两种分数的比例 |\n| 为什么混合 | \"你怎么解决高并发\"和文档里的\"多路并发与性能\"字面不同，靠向量；\"OpenVINO 绑核\"\"mFRR\"这类专有名词靠关键词 |\n\n几百段文本不需要向量数据库，numpy 矩阵乘就够了。没有模型文件或向量时自动退回纯 BM25（`/agent/api/health` 的 `search` 字段显示 `hybrid` 或 `bm25`）。",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 系统架构",
-"url": "https://github.com/rfs151/ai-scada#系统架构",
-"text": "```\n浏览器 ──HTTP(S)/WS──► gateway  Caddy：前端静态页面 + 反向代理（有域名时自动 HTTPS）\n                          │ /api  /ws\n                          ▼\n                         api  FastAPI：REST、WebSocket 推送；后台运行告警引擎、\n                          │   数据校核、遥控会话、历史库写入、事故追忆、自动复位\n                ┌─────────┴──────────┐\n                ▼                    ▼\n              redis               db（TimescaleDB）\n     实时库 + 消息总线          历史遥测（hypertable + 1 分钟聚合）、\n   （实时值、变化流、SOE 流、    SOE、告警、审计、事故追忆、用户、点表\n     遥控命令、仿真控制通道）\n                ▲\n                │\n               fep  前置机：IEC 104 主站（建链、总召、对时、收数、下发遥控）\n                ▲\n                │ IEC 104（TCP 2404，仅容器内网）\n                │\n             rtu-sim  仿真子站：pandapower 潮流 + 保护/自动装置 + IEC 104 子站\n```\n\n对应真实调度自动化系统的 **厂站 RTU → 通道 → 前置 FEP → SCADA 服务器 → 人机界面** 结构。rtu-sim 和 fep 是两个独立进程，它们之间走真实的 TCP 104 报文：\"报文监视\"看到的就是这条链路上的帧，\"通道中断\"场景也是真的断开连接。\n\n| 容器 | 角色 | 说明 |\n|---|---|---|\n| `rtu-sim` | 子站（RTU/测控装置） | 潮流计算、负荷曲线、开关动作过程、保护与自动装置、间隔层联锁，IEC 104 从站 |\n| `fep` | 前置机 | IEC 104 主站；品质处理、变化检测、SOE、报文记录，转发遥控命令 |\n| `redis` | 实时库 / 消息总线 | 每个测点的最新值；Redis Streams 传变化数据、SOE、遥控命令、仿真控制 |\n| `db` | 历史库 | TimescaleDB（PostgreSQL 16 + 时序扩展） |\n| `api` | SCADA 应用服务 | 见上 |\n| `gateway` | 网关 | 前端静态页面 + `/api`、`/ws` 反向代理 |\n\n| 目录 | 说明 |\n|---|---|\n| `config/station.yaml` | 厂站模型（单一事实来源）：主接线、设备参数、负荷特性；点表由它按规则生成 |\n| `config/interlock.yaml` | 五防规则库 |\n| `packages/scadalib` | 共享库：**自研 IEC 104 规约栈**、厂站模型与点表生成、拓扑分析、仿真时钟 |\n| `services/rtu-sim` | 仿真子站 |\n| `services/fep` | 前置采集 |\n| `services/api` | SCADA 服务（`alarm` 告警与数据校核、`control` 遥控与五防、`reports` 报表、`forecast` 负荷预测、`brief` 事故简报） |\n| `web` | Vue 3 人机界面；`web/Dockerfile` 构建网关镜像 |\n| `deploy` | Caddyfile、数据库初始化脚本 |\n| `scripts/demo` | 演示视频与截图录制脚本 |\n\n---",
+"title": "ai-agent · 作品集 AI 助手 > SSE 事件",
+"url": "https://github.com/rfs151/ai-agent#sse-事件",
+"text": "| 事件 | 数据 | 页面上 |\n|---|---|---|\n| `meta` | `session`、`search` | 存到 sessionStorage，下次提问带上 |\n| `node_start` / `node_end` | 节点名、摘要、耗时 | 回答上方的步骤列表（记忆没压缩时不显示） |\n| `memory` | `visitor` 或 `summary` | 抽屉顶部显示\"已记住：公司 · 岗位 · 关注\" |\n| `text` | `delta` | 追加到回答，实时渲染 Markdown |\n| `tool_start` / `tool_end` | 工具名、参数 / 摘要（含\"关键词#2 语义#1\"）、耗时 | 节点下面缩进显示 |\n| `ui_action` | `{\"type\": \"highlight\", \"projects\": [...]}` | 高亮项目卡片 |\n| `done` | 意图、执行路径、token、费用、耗时 | \"查看执行过程\" |\n| `error` | 提示文字 | 红字提示；历史只在最后一个节点写入，出错的这一轮不会留下 |",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识",
-"url": "https://github.com/rfs151/ai-scada#电力-scada-业务知识",
-"text": "本节整理项目涉及的电力 SCADA 基础知识，每条都对应系统里能看到、能操作的功能。",
+"title": "ai-agent · 作品集 AI 助手 > 设计要点",
+"url": "https://github.com/rfs151/ai-agent#设计要点",
+"text": "| 问题 | 做法 |\n|---|---|\n| 费用 | 系统提示词（规则 + 简历 + 项目摘要）固定不变，问答 Agent、JD 打分、JD 报告都把它放在第一条，共用 DeepSeek 前缀缓存（命中价约 1/50）；会话记忆放在后面的单独一条消息里，不破坏缓存；关闭思考模式 |\n| JD 报告编造 | 拆解、检索、打分、出表分开做；打分只能引用检索到的证据编号，表格和链接由代码生成 |\n| 回答编造 | 提示词单列\"只说资料里有的\"：排查过程、数字、在职状态等资料没写的一律不说；温度 0.3，JSON 调用温度 0 |\n| 路由出错 | 意图不在三类里就当问答；判成 JD 但消息不到 40 字（没贴 JD）也当问答；JD 没拆出要求就转给问答 Agent |\n| 被当成免费大模型用 | 只回答职业相关问题；单条最多 3000 字，每个会话最多 20 轮 |\n| 刷接口 | 每个 IP 每小时 20 问、每天 60 问；全站每小时 200 问；全站每天费用超过 20 元就关闭。经 frp 转发时看不到访客 IP（都是 127.0.0.1），这时只按全站计数 |\n| 提示注入 | 用户消息和工具结果都只当资料；工具全是只读的 |\n| 思考模式 | 如果开启（`THINKING=enabled`），工具循环里助手消息连同 `reasoning_content` 原样回传，DeepSeek 要求这样，否则返回 400；跨轮的历史只存问题和最终回答 |\n| 后端没起来 | 首页先请求 `/agent/api/health`，失败就不显示助手，首页其他部分照常 |",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 1. SCADA 是什么：四遥与分层结构",
-"url": "https://github.com/rfs151/ai-scada#1-scada-是什么四遥与分层结构",
-"text": "SCADA（Supervisory Control And Data Acquisition）是调度自动化系统的基础功能：把分散在各变电站的电气量采集到调度中心，供调度员监视，并下发控制命令。\n\n**四遥**是 SCADA 最基本的数据分类：\n\n| 类别 | 方向 | 含义 | 本项目示例 |\n|---|---|---|---|\n| 遥测（YC） | 厂站 → 主站 | 连续变化的模拟量 | 母线电压、线路 P/Q/I、功率因数、主变油温、频率 |\n| 遥信（YX） | 厂站 → 主站 | 开关量状态 | 断路器/刀闸位置、保护动作、重合闸动作、事故总 |\n| 遥控（YK） | 主站 → 厂站 | 分合命令 | 断路器分闸/合闸 |\n| 遥调（YT） | 主站 → 厂站 | 调节命令 | 主变分接头升降档、光伏有功设定 |\n\n另有**电度**（累计量，如正向有功电量）和 **SOE**（带毫秒时标的事件顺序记录）。\n\n**分层结构**：厂站侧的 RTU 或测控装置采集数据 → 经通道（专线或调度数据网）用规约上送 → 主站**前置机**负责通信和规约解析 → **SCADA 服务器**做实时处理、告警、存储 → **人机界面**给调度员监视和操作。本项目的 6 个容器就是按这个结构拆分的。\n\n**点表**是厂站和主站的约定：每个测点有唯一的信息体地址（IOA），双方据此对应数据。本项目按国内 104 实施细则常用的分段分配地址：遥信从 `0x0001`、遥测从 `0x4001`、遥控从 `0x6001`、遥调从 `0x6201`、电度从 `0x6401` 开始。点表由厂站模型自动生成（`make points`）。新间隔追加在末尾，已有地址不变。",
+"title": "ai-agent · 作品集 AI 助手 > 目录",
+"url": "https://github.com/rfs151/ai-agent#目录",
+"text": "```\napp/main.py      接口、SSE、限流检查、会话锁\napp/agent.py     运行状态图，把节点上报的事件转给页面，汇总 token 和费用\napp/graph.py     LangGraph 状态图：各节点和连线\napp/llm.py       DeepSeek 流式调用、JSON 模式、费用\napp/tools.py     问答 Agent 的工具；retrieve() 也给 JD 工作流用\napp/search.py    BM25 + 向量混合检索（RRF）\napp/prompt.py    系统提示词和各节点的提示词\napp/store.py     SQLite：对话记录、限流、费用\nknowledge/       profile.md（简历）、projects.md（项目摘要）、projects/*.md（项目说明）、index.json、vectors.npz\nscripts/build_index.py   生成 index.json 和 vectors.npz（第一次运行会下载向量模型到 models/）\ntests/           pytest；fake_llm.py 是模拟的 DeepSeek 流式接口，按系统提示词扮演各个节点，测试不花钱\n前端在网关仓库：site/agent.js、site/agent.css\n```",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 2. 变电站一次接线",
-"url": "https://github.com/rfs151/ai-scada#2-变电站一次接线",
-"text": "**一次设备**是直接承载电能的设备（断路器、刀闸、主变、母线、线路），**二次设备**是保护、测控、通信等。\n\n| 设备 | 作用 | 能否切断负荷电流 |\n|---|---|---|\n| 断路器 | 正常分合负荷电流，故障时由保护跳闸切断短路电流 | 能，包括短路电流 |\n| 隔离刀闸 | 形成明显可见的断开点，保证检修安全 | **不能**，只能在无电流时操作 |\n| 接地刀闸 | 检修时把已停电的设备接地，防止突然来电伤人 | 只能在无电压时合上 |\n\n**本站主接线**：\n\n- **110kV 内桥接线**：两回进线（101、102）各带一台主变，两条进线之间用桥断路器 100 连接，100 正常**热备用**（断开，随时可合）。主变高压侧不设断路器，只有刀闸（1101、1102）。设备少、投资省，适合进线较长、主变不需要频繁投切的终端站。代价是：主变检修时，要断开对应进线和桥开关才能让主变停电。\n- **10kV 单母线分段**：两段母线各由一台主变供电，分段断路器 900 正常热备用，两段**分列运行**。原因有三点：\n  1. **限制短路电流**：两台主变低压侧并列时，短路电流约为单台的两倍，可能超过 10kV 开关的遮断能力。\n  2. **缩小故障范围**：一段母线故障只影响本段负荷。\n  3. **避免环流**：两台主变的阻抗、档位不完全一致，并列会产生环流。\n\n  可靠性由 **10kV 分段备自投**保证：一台主变失电后，自动合上 900，由另一台主变带全部负荷。五防规则里也有\"两台主变低压侧都运行时禁止合分段开关\"。\n- **设备编号**沿用调度命名习惯：断路器 101/102/100/901/902/900/9xx；母线侧刀闸 xxx1；线路（主变）侧刀闸 xxx6；线路接地刀 xxx67；10kV 出线为中置式开关柜（手车断路器），不设刀闸，只有出线接地刀 9xx7。",
+"title": "ai-agent · 作品集 AI 助手 > 运行",
+"url": "https://github.com/rfs151/ai-agent#运行",
+"text": "```bash\ncp .env.example .env && vi .env            # 填 DEEPSEEK_API_KEY\ndocker build --network host -t ai-agent:latest . && docker compose up -d --force-recreate   # 监听 127.0.0.1:8099\n# （docker compose build 在配置了 network: host 时需要额外权限，所以单独用 docker build）\n```\n\n网关（`/root/proj/gateway`）的 Caddyfile 里已经加了 `handle /agent/*`，改完执行\n`docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`。\n\n本地开发，不经过网关：\n\n```bash\npython -m venv .venv && .venv/bin/pip install -r requirements.txt pytest\nDEV_SITE=../gateway/site .venv/bin/python -m app.main     # http://127.0.0.1:8099/ 就是首页\n.venv/bin/python -m pytest -q                              # 13 项，用模拟模型\n# 不花钱试页面：先 .venv/bin/python -m tests.fake_llm 8199，再加 DEEPSEEK_BASE_URL=http://127.0.0.1:8199\n```\n\n项目文档或项目说明更新后重建索引：`.venv/bin/python scripts/build_index.py`（约 40 秒，生成向量）。构建镜像前要先运行一次，把向量模型下载到 `models/`（镜像里离线加载）。",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 3. 倒闸操作与五防",
-"url": "https://github.com/rfs151/ai-scada#3-倒闸操作与五防",
-"text": "**倒闸操作**是改变设备运行状态（运行 / 热备用 / 冷备用 / 检修）的操作。基本顺序：\n\n- **停电**：先断开断路器 → 再拉开**线路侧**刀闸 → 最后拉开**母线侧**刀闸 → 验电 → 合接地刀（或挂接地线）\n- **送电**：顺序相反，先拆除接地 → 合母线侧刀闸 → 合线路侧刀闸 → 最后合断路器\n\n先拉线路侧刀闸的原因：如果断路器实际没有断开，拉刀闸时产生的电弧短路发生在线路侧，由本线路保护切除，只影响这一回线；如果先拉母线侧刀闸，故障就落在母线上，会造成整段母线停电。\n\n**内桥接线示例**：\n\n- **进线一检修，1 号主变不停电**：合桥开关 100 → 分 101 → 拉 1016 → 拉 1011 → 在线路侧验电 → 合 10167。两回进线来自不同电源，先合 100 再分 101 属于\"合环\"操作，需要调度确认两侧允许合环；不允许时先分 101 再合 100，1 号主变会短时停电。\n- **1 号主变检修**：分 901（先断开低压侧负荷）→ 分 101 和 100（主变高压侧没有断路器，只能断开进线和桥开关使主变失电）→ 拉 1101。这就是五防规则 `1101: 901=分 & 101=分 & 100=分` 的由来。\n\n**五防**是防止误操作的五项要求：\n\n1. 防止误分、误合断路器\n2. 防止带负荷拉、合隔离刀闸\n3. 防止带电挂（合）接地线（接地刀闸）\n4. 防止带接地线（接地刀闸）合断路器（隔离刀闸）\n5. 防止误入带电间隔\n\n本项目在主站和间隔层设了两道防线，互为备用：\n\n- **主站规则库**（`config/interlock.yaml`）：表达式，例如 `1016: 101=分`，表示 1016 刀闸操作前断路器 101 须在分位，防止带负荷拉刀闸。\n- **主站拓扑防误**：先模拟操作后的拓扑，若会出现\"带电又接地\"的节点（带地线合闸、带电合接地刀），或接地线挂在带电节点上，就闭锁。\n- **挂牌闭锁**：检修牌禁止一切遥控，禁止合闸牌禁止合闸。\n- **位置不确定闭锁**：设备在中间态、不定态或品质无效时禁止操作。\n- **子站间隔层联锁**（rtu-sim）：断路器合位时，禁止操作同间隔的刀闸。\n\n选择和执行前，主站各复核一次五防。",
+"title": "ai-agent · 作品集 AI 助手 > 查看招聘方问了什么",
+"url": "https://github.com/rfs151/ai-agent#查看招聘方问了什么",
+"text": "```bash\nsqlite3 data/agent.db \"SELECT datetime(ts,'unixepoch','localtime'), json_extract(tools,'$.intent'), json_extract(tools,'$.visitor'), question, round(cost,4) FROM turns ORDER BY id DESC LIMIT 20\"\n```",
 "part": 0
 },
 {
-"project": "scada",
+"project": "agent",
 "source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 4. 遥控：选择-返校-执行",
-"url": "https://github.com/rfs151/ai-scada#4-遥控选择-返校-执行",
-"text": "遥控直接改变电网状态，误动后果严重，所以采用 **SBO（Select Before Operate，选择-返校-执行）**，并配合人员上的双重确认。\n\n**人员流程**：\n\n1. **复诵**：操作人输入设备编号，确认操作对象。\n2. **监护**：由另一名监护员用自己的账号口令确认，同一人不能既操作又监护。\n3. **选择**：主站发送选择命令，子站检查对象和状态无误后**返校**（回复确认）。\n4. **执行**：返校后 30 秒内必须执行，超时由子站自动撤销选择。\n\n每一步都可以撤销，每一步都写入审计日志。\n\n**规约层**（双点遥控 `C_DC_NA_1`）：\n\n```\n主站 → 子站  C_DC_NA_1  COT=6 激活      S/E=1（选择）  DCS=2（合）\n子站 → 主站  C_DC_NA_1  COT=7 激活确认  S/E=1          ← 返校成功（P/N=1 为否定确认，选择失败）\n主站 → 子站  C_DC_NA_1  COT=6 激活      S/E=0（执行）\n子站 → 主站  C_DC_NA_1  COT=7 激活确认  S/E=0\n子站 → 主站  M_DP_TB_1  COT=3 突发      断路器位置 = 合（带毫秒时标的 SOE）\n子站 → 主站  C_DC_NA_1  COT=10 激活终止                ← 命令执行完毕\n撤销：主站发 COT=8 停止激活 → 子站回 COT=9 停止激活确认\n```\n\n两步命令的意义：选择阶段子站确认对象正确、状态允许，执行阶段才真正出口。即使执行报文在传输中出错，没有经过选择的对象也不会动作。执行时命令值与选择时不一致，子站同样拒绝。\n\n**遥调**：`C_RC_NA_1` 升降命令（主变调档，OLTC 每档约 5 秒）、`C_SE_NC_1` 浮点设点（光伏有功限值），同样有激活 → 激活确认 → 激活终止的过程。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 5. IEC 60870-5-104 规约",
-"url": "https://github.com/rfs151/ai-scada#5-iec-60870-5-104-规约",
-"text": "IEC 104 是国内调度自动化最常用的厂站通信规约，在 TCP/IP 上传输（端口 2404）。\"**自研规约栈**\"指本项目自己实现了这个**国际标准规约**的编解码和链路状态机（`packages/scadalib/scadalib/iec104`，纯 asyncio，无第三方依赖），不是自定义接口。它能和其他厂家的 104 实现互通，测试里与 lib60870-C（c104）做了双向互操作验证。\n\n**帧结构**\n\n```\nAPCI（应用规约控制信息，6 字节）           ASDU（应用服务数据单元）\n┌────┬─────┬────────────────────┐  ┌────────┬─────┬───────┬──────┬───────────┬──────────┐\n│ 68 │ 长度 │ 控制域 4 字节       │  │类型标识 │ VSQ │ 传送原因 │公共地址│信息体地址  │ 信息元素  │\n│起始│ 1B  │ 决定 I / S / U 帧   │  │ 1B     │ 1B  │ 2B     │ 2B   │ 3B        │ 值+品质+时标│\n└────┴─────┴────────────────────┘  └────────┴─────┴───────┴──────┴───────────┴──────────┘\n```\n\n| 帧类型 | 用途 | 控制域 |\n|---|---|---|\n| **I 帧**（信息帧） | 携带 ASDU，传数据和命令 | 含发送序号 N(S) 和接收序号 N(R)，各 15 位，循环使用 |\n| **S 帧**（监视帧） | 只确认收到的 I 帧，不带数据 | 只含 N(R) |\n| **U 帧**（控制帧） | 链路控制 | STARTDT 启动数据传输、STOPDT 停止、TESTFR 链路测试 |\n\nASDU 字段：\n\n- **类型标识**：数据类型，见下表。\n- **VSQ**：信息体个数；SQ=1 表示地址连续，只写首地址。\n- **传送原因（COT）**：1 周期、3 突发、5 请求、6 激活、7 激活确认、8 停止激活、10 激活终止、20 响应总召、37 响应电度召唤、44~47 未知类型/原因/公共地址/信息体地址。\n- **公共地址**：厂站地址。\n- **信息体地址（IOA）**：测点地址。\n\n| 类型标识 | 名称 | 本项目用途 |\n|---|---|---|\n| 1 / 30 | `M_SP_NA_1` / `M_SP_TB_1` 单点遥信（30 带时标） | 保护动作、告警信号 |\n| 3 / 31 | `M_DP_NA_1` / `M_DP_TB_1` 双点遥信（31 带时标） | 断路器、刀闸位置（01 分、10 合、00 中间态、11 不定态） |\n| 13 | `M_ME_NC_1` 短浮点遥测 | 电压、电流、功率等 |\n| 15 | `M_IT_NA_1` 累计量 | 电度 |\n| 45 / 46 | `C_SC_NA_1` / `C_DC_NA_1` 单点 / 双点遥控 | 断路器分合 |\n| 47 | `C_RC_NA_1` 升降命令 | 主变调档 |\n| 50 | `C_SE_NC_1` 浮点设点 | 光伏有功设定 |\n| 100 | `C_IC_NA_1` 总召唤 | 读取全部遥测遥信 |\n| 101 | `C_CI_NA_1` 电度召唤 | 读取电度 |\n| 103 | `C_CS_NA_1` 时钟同步 | 对时 |\n\n**流量控制 k / w**：\n\n- **k = 12**：发送方最多连续发送 12 个未被确认的 I 帧，达到后停止发送，等待对方确认。\n- **w = 8**：接收方最迟收到 8 个 I 帧后必须回一次确认（S 帧，或在自己的 I 帧里捎带 N(R)）。\n\n规约要求 w ≤ 2/3·k，保证发送方在被窗口卡住之前就能收到确认。\n\n**定时器**（主站、子站两侧各自维护）：",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 5. IEC 60870-5-104 规约",
-"url": "https://github.com/rfs151/ai-scada#5-iec-60870-5-104-规约",
-"text": "| 定时器 | 默认 | 含义 |\n|---|---|---|\n| t0 | 30 s | 建立 TCP 连接超时（主站发起连接时使用） |\n| t1 | 15 s | 发出 I 帧或 TESTFR 后等待对方确认的超时 |\n| t2 | 10 s | 收到 I 帧后最迟多久发确认（无数据可捎带时发 S 帧），须 t2 < t1 |\n| t3 | 20 s | 链路空闲多久发 TESTFR 测试帧 |\n\n**t1 超时之后发生什么**：发送方认为链路故障，主动关闭 TCP 连接，未确认的 I 帧作废。主站侧把该通道所有数据的品质置为 NT（非当前值），画面灰显，产生\"通道中断\"告警。随后主站按 t0 周期重连，连接成功后依次执行 STARTDT → 对时 → 总召 → 电度召唤，用全站最新数据覆盖中断期间的旧值。故障注入里的\"通道中断\"演示的就是这个过程。\n\n**数据怎么上送**：\n\n- **突发上送（COT=3）**：遥信变位立即上送，带毫秒时标；遥测变化超过死区才上送。\n- **总召唤（COT=20）**：主站发 `C_IC_NA_1`，限定词 QOI=20 表示\"站总召唤\"。子站回激活确认 → 上送全部遥信遥测 → 激活终止。用于建链后初始化，以及周期性校核（防止漏掉突发数据）。\n- **电度召唤（COT=37）**：`C_CI_NA_1`，限定词 QCC=5 表示\"总请求、只读不冻结\"。报文监视里显示为\"QCC=5 总请求\"。\n- **对时**：主站下发 `C_CS_NA_1`（CP56Time2a 7 字节时标：毫秒、分、时、日/星期、月、年），子站据此校正时钟。RTU 时钟不准时，SOE 时标也不准，所以建链后先对时。本项目的仿真 RTU 启动时故意带 1~2.5 秒偏差，对时后校正。\n\n**报文示例**：\n\n```\n68 04 07 00 00 00              U 帧 STARTDT 激活（确认为 0B，TESTFR 激活 43 / 确认 83）\n68 04 01 00 0A 00              S 帧，确认已收到序号 0~4 的 I 帧（N(R)=5，字节为 5 左移 1 位）\n68 0E 00 00 00 00 64 01 06 00 01 00 00 00 00 14\n   └ I 帧 N(S)=0 N(R)=0 │ 类型 100 总召 │ VSQ=1 │ COT=6 激活 │ 公共地址 1 │ IOA=0 │ QOI=20\n68 12 04 00 0A 00 32 01 06 00 01 00 01 62 00 00 00 40 40 00\n   └ I 帧 N(S)=2 N(R)=5 │ 类型 50 浮点设点（遥调）│ COT=6 激活 │ IOA=0x6201 │ 值 3.0（IEEE754 小端）│ QOS=0\n```",
-"part": 1
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 6. 数据质量：死区、品质位、时标与 SOE",
-"url": "https://github.com/rfs151/ai-scada#6-数据质量死区品质位时标与-soe",
-"text": "- **死区**：遥测变化超过死区才上送，避免噪声占满通道。例如 10kV 出线有功死区 0.05 MW、110kV 进线电流 2 A、10kV 母线电压 0.02 kV。代价是主站看到的值与真实值最多相差一个死区。数据校核的容差就是按死区计算的。\n- **品质位**：每个值都带品质描述。IV 无效、NT 非当前值（通道中断后旧值）、SB 被取代（人工置数）、BL 被闭锁、OV 溢出。品质异常的量测在画面上灰显，不参与告警和计算。\n- **时标**：遥信变位带 **设备时标**（RTU 在事件发生时记录，毫秒级）；短浮点遥测 `M_ME_NC_1` 不带时标，主站按收到的时间记录。所以事故回放时，电流、电压的变化会比 SOE 滞后几百毫秒。\n- **SOE（事件顺序记录）**：按设备时标排序的遥信变位序列，用来分析\"保护先动作、断路器 61 毫秒后跳开、1 秒后重合\"这样的先后关系。\n- **事故总 / 预告总**：全站事故信号的\"或\"，任一保护动作即触发事故总，用来触发事故追忆和音响。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 7. 告警分级与越限",
-"url": "https://github.com/rfs151/ai-scada#7-告警分级与越限",
-"text": "| 级别 | 含义 | 示例 | 处理 |\n|---|---|---|---|\n| 事故 | 保护动作、开关事故跳闸 | 锦苑线保护动作、912 事故跳闸 | 音响 + 闪烁，必须人工确认 |\n| 异常 | 设备或系统异常 | 通道中断、重瓦斯、接地告警、数据校核异常 | 音响 + 闪烁，必须人工确认 |\n| 越限 | 遥测超出限值 | 母线电压越上限、线路电流越限 | 需确认 |\n| 变位 | 开关正常变位 | 遥控合闸成功 | 需确认 |\n| 告知 | 恢复、提示类信息 | 越限恢复、通道恢复 | 自动确认 |\n\n开关分闸按原因分类：\n\n- **遥控变位**：主站有对应的遥控命令，记录操作人和监护人。\n- **事故跳闸**：保护动作前后 5 秒内的分闸。\n- **重合闸合闸**、**备自投分合闸**。\n- 其余为**非遥控变位**（可能是现场就地操作）。\n\n**越限**有四级限值：上上限、上限、下限、下下限。为避免负荷在限值附近来回波动造成反复告警，做了两项处理：\n\n- **回差**：恢复时须回到限值以内 max(死区, 1% 限值)。\n- **延时**：越限和恢复都要持续 10 秒才确认，越上上限立即告警。\n\n本站电压限值：110kV 106.7~117.7 kV，10kV 10.0~10.7 kV，频率 49.8~50.2 Hz。母线失压时闭锁该母线的频率、零序告警，避免停电时满屏告警。挂了检修牌的间隔，告警自动抑制。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 8. 继电保护与站内自动装置",
-"url": "https://github.com/rfs151/ai-scada#8-继电保护与站内自动装置",
-"text": "| 装置 | 本站整定 | 动作逻辑 |\n|---|---|---|\n| **出线过流保护** | 0.3 s | 电流超过整定值并持续 0.3 秒，跳开本线路断路器 |\n| **重合闸** | 1 s，动作后 15 s 充电 | 架空线路多数故障是瞬时性的（雷击、树枝碰线），跳闸后自动重合一次，成功即恢复供电 |\n| **后加速** | 0.04 s | 重合或手动合闸于故障时，不再等 0.3 秒，加速跳闸，减少对设备的冲击 |\n| **主变差动** | 速动 | 比较主变各侧电流，内部故障时差流很大，跳主变各侧断路器 |\n| **重瓦斯 / 轻瓦斯** | — | 主变内部故障使油分解产生气体；轻瓦斯发告警，重瓦斯跳闸 |\n| **110kV 桥备自投** | 1.5 s | 一回进线失电时，跳开该进线断路器，合上桥开关 100 |\n| **10kV 分段备自投** | 3 s | 一段母线失电时，跳开该段主变低压侧断路器，合上分段 900 |\n\n- **瞬时性与永久性故障**：重合成功说明是瞬时性故障；重合于故障被后加速再次跳开，说明是永久性故障，要巡线找到故障点、隔离后才能试送。\n- **备自投的充电与放电**：备自投在正常运行方式下持续 10 秒才\"充电\"（具备动作条件）。手动分合相关开关会使它立即\"放电\"，防止调度员主动停电时备自投误合。主变差动、重瓦斯动作时闭锁桥备自投，避免把故障主变再投到另一条进线上。\n- **时间级差配合**：进线失电时，两级备自投都会检测到失压。桥备自投 1.5 秒先动作，恢复了 10kV 电压；分段备自投（3 秒）随即检测到电压恢复，不再动作。上级先动、下级后动，避免两级同时动作造成多余的开关操作。故障注入「110kV 进线失电」演示的就是这个过程。\n- **小电流接地系统**：10kV 系统中性点不接地或经消弧线圈接地。单相接地时故障电流很小，线电压仍然对称，可以继续运行（一般不超过 2 小时），所以保护不跳闸，只发接地告警。判断依据是母线零序电压 3U0 升高（本站约 92 V）。找出是哪条线路接地，传统方法是**拉路选线**：逐条短时拉开出线，3U0 消失的那条就是接地线路。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 9. 拓扑着色",
-"url": "https://github.com/rfs151/ai-scada#9-拓扑着色",
-"text": "接线图的颜色不是写死的，而是由开关的实时状态计算出来的：\n\n- 模型按 IEC 61970 CIM 的**连接节点**（ConnectivityNode）组织：每台设备连接 1~2 个节点，合位开关、线路、主变把节点连通。\n- **带电**：从电源点出发，经合位开关、线路、主变做广度优先搜索，能到达的节点带电，按电压等级着色；到达不了的为失电（灰色）。\n- **接地**：从合位接地刀或临时接地线出发，经合位开关和线路传递，但**不穿过主变**。主变两侧绕组之间只有磁耦合，没有电气连接，一侧接地不会使另一侧成为接地状态（所以主变检修要在两侧分别隔离、分别接地）。\n- **带电又接地**：带电合接地刀属于恶性误操作，单独标红闪烁；五防的拓扑防误就是在操作前做这个计算。\n- 开关在中间态、不定态或品质无效时按\"不导通\"处理，宁可少着色也不误着色。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 电力 SCADA 业务知识 > 10. 运行指标与智能分析",
-"url": "https://github.com/rfs151/ai-scada#10-运行指标与智能分析",
-"text": "- **电压合格率** = (考核时间 − 越限时间) / 考核时间。用 1 分钟平均电压判断是否越限，停电时间不计入考核。\n- **负荷率** = 平均负荷 / 最大负荷，越接近 1 说明用电越平稳。**峰谷差率** = (最大负荷 − 最小负荷) / 最大负荷。\n- **主变负载率** = 视在功率 / 额定容量；调档次数反映电压调节的频繁程度。\n- **数据校核（坏数据辨识）**：一个节点的功率流入应等于流出（基尔霍夫定律），一个间隔的 √(P²+Q²) 应约等于 √3·U·I。利用这些冗余关系，可以在一次设备完全正常时发现**测量回路**的问题，例如 CT 极性接反（有功变负、母线功率不平衡）、变送器卡死（数值不刷新）、量程设置错误（只有间隔自洽能发现）。\n- **短期负荷预测（相似日法）**：同一时刻的负荷在相邻日之间高度相关。取前几日同一时刻加权平均，剔除事故停电等异常日，再用最近的实测值滚动修正。准确率按调度考核口径计算：1 − √(mean(((实际 − 预测) / 实际)²))。\n- **事故简报**：值班员事故后要向调度汇报\"什么时间、什么保护动作、跳了哪些开关、损失多少负荷、初步判断、下一步怎么处理\"。系统从追忆数据中自动整理这些事实。\n\n---",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 技术要点",
-"url": "https://github.com/rfs151/ai-scada#技术要点",
-"text": "**IEC 104 规约栈（`packages/scadalib/scadalib/iec104`）**\n- APCI I/S/U 帧、15 位序号回绕；k/w 流量控制；t0~t3 定时器\n- ASDU：单/双点遥信（含 CP56Time2a SOE）、短浮点遥测、电度、双点遥控、升降、设点、总召、电度召唤、对时；SQ=1 解码\n- 子站：SBO 及超时/撤销、值不一致拒绝、否定确认（COT 44~47）\n- 主站：断线重连、STARTDT → 对时 → 总召 → 电度召唤，周期召唤，命令等待激活确认/激活终止\n- 与 lib60870-C（c104）双向互操作测试\n\n**仿真子站**\n- pandapower 交流潮流，开关分合真实改变拓扑\n- 工业/居民/商业典型日负荷曲线 + OU 随机过程；光伏晴空曲线 × 云量\n- 60 倍速仿真时钟，对齐本地时间：每个整点、24 分、48 分为仿真零点（`scadalib/simclock.py`），子站重启后历史数据的仿真钟点不变\n- 刀闸 3 秒行程（双点\"中间态\"）、OLTC 5 秒/档、IEC 60076-7 顶层油温模型、电度积分\n- 量测故障注入（CT 极性、变送器卡死、量程错误）只影响上送值，不影响潮流\n\n**一次接线图（`web/src/diagram`、`web/src/lib/topology.ts`）**\n- 图模分离：布局文件只存坐标和模型引用，`layout.test.ts` 对照模型与点表做图模一致性校验\n- 配色：110kV 朱红、10kV 绛红（Q/GDW 624），失电灰；开关红合绿分\n\n**告警与数据校核（`services/api/app/alarm`）**\n- 规则引擎消费 Redis 变化流与 SOE 流；越限回差与延时；检修抑制\n- 数据校核每 2 秒对实时断面计算一次；异常持续 15 秒告警，消失 15 秒恢复（避开短路暂态）；功率不平衡结合间隔自洽定位可疑间隔\n\n**遥控（`services/api/app/control`）**\n- 会话状态机：pending → authorized → selected → done，任一步可撤销，选择后 30 秒超时自动撤销\n- 认证：PBKDF2 口令 + JWT；登录限流；全部操作写审计日志\n\n**事故追忆与简报**\n- 事故总 / 保护 / 自动装置动作自动生成追忆；同一事故 20 秒内的后续动作合并\n- 回放数据 = 触发前 30 秒全站断面 + 窗口内全部遥测变化与 SOE，前端从断面出发逐条应用\n- 简报以最后一个保护或自动装置信号后 2 秒作为事故过程的结束，之后的操作单列；配置 `ANTHROPIC_API_KEY` 后可由大模型（默认 `claude-opus-5-5`）基于同一份事实撰写，开启了服务端 `fallbacks: \"default\"`（模型拒答时由服务端换模型重试）\n\n**报表与负荷预测**\n- 历史库只存变化：统计前按\"前值保持\"补齐没有变化记录的分钟\n- 负荷预测：前 7 个仿真日同一时刻加权平均，剔除偏离中位数 25% 以上的值，最近 1 小时实测滚动修正（限幅 ±15%）；离线回测约 99%\n- 仿真负荷没有气象、节假日等特征，LightGBM 等模型只能学到同一时刻的历史值，所以选了可解释的相似日法；接口按\"历史序列 → 预测序列\"设计，可替换\n\n**实时与历史**\n- 历史写入：Redis Stream 消费组 + 批量 COPY，写库成功才 ACK（至少一次）\n- TimescaleDB hypertable、1 分钟连续聚合、3 天后压缩、30 天保留\n- 推送：按画面订阅、200 ms 合帧、只推增量\n\n---",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发",
-"url": "https://github.com/rfs151/ai-scada#本地开发",
-"text": "环境：Linux / WSL2、Docker（含 compose 插件）、Python 3.12、Node.js 20+、make、tmux。\n\n本机有两种运行方式。日常开发用**本机开发模式**；**Docker 开发模式**用于部署前验证镜像，Docker 生产部署只在服务器上使用（见 [Docker 部署](#docker-部署)）。\n\n| | 本机开发模式 `make local` | Docker 开发模式 `make up-full` |\n|---|---|---|\n| db、redis | Docker 容器 | Docker 容器 |\n| rtu-sim、fep、api | 本机进程（tmux），改代码即时生效，可打断点 | 容器；只有 api 热重载，fep/rtu-sim 改动需重新构建镜像 |\n| 前端 | Vite http://localhost:5173 | 网关镜像 http://localhost:18088 |\n| 用途 | 日常开发调试 | 提交/部署前验证镜像和容器间连通 |\n\n两种方式共用同一个 Redis，不能同时运行：`make local` 启动时会自动停掉 Docker 里的 api/fep/rtu-sim/gateway；切回 Docker 时先执行 `make local-stop` 再执行 `make up-full`。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发 > 首次准备",
-"url": "https://github.com/rfs151/ai-scada#首次准备",
-"text": "```bash\ngit clone https://github.com/rfs151/ai-scada.git && cd ai-scada\nmake env        # 生成本地 .env（开发口令、镜像标签 dev）\nmake venv       # 创建 .venv（全部 Python 服务 + 测试工具）\n```",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发 > 本机开发模式（推荐）",
-"url": "https://github.com/rfs151/ai-scada#本机开发模式推荐",
-"text": "```bash\nmake local                  # 一键启动并自检；已在运行时只做自检 → http://localhost:5173\nmake local-check            # 只做自检\nmake local-attach           # 进入 tmux 看实时日志（Ctrl-b n 切换窗口，Ctrl-b d 退出）\nmake local-restart S=fep    # 重启单个进程：rtu-sim / fep / api / web\nmake local-stop             # 停止本机进程（db/redis 容器保留）\n```\n\n`make local`（脚本 `scripts/local.sh`）依次完成：\n\n1. 停掉 Docker 里的业务容器，避免两套仿真/前置同时写 Redis；\n2. 启动 db、redis 容器并等待健康；\n3. 在 tmux 会话 `ai-scada-local` 中启动 4 个进程：rtu-sim（104 子站 2404）、fep、api（18000，`--reload` 热重载）、web（Vite 5173）；\n4. 自检，任一项失败即报错退出：\n\n| 检查项 | 判断方法 |\n|---|---|\n| 进程存活 | 4 个 tmux 窗口都在且进程未退出（进程退出后窗口保留，方便看报错） |\n| API 就绪 | `GET /api/health` 返回 ok（数据库、实时库均正常） |\n| 104 通道 | Redis `ch:rtu1` 状态为 `up` |\n| 数据在刷新 | Redis 流 `rt:chg` 3 秒内有新数据 |\n| 前端 | Vite 页面可访问，且 `/api` 代理到 api 正常 |\n\n各进程日志同时写入 `.run/<服务名>.log`（已在 `.gitignore` 中）。配置文件无需额外设置：scadalib 以可编辑方式安装，会自动找到仓库里的 `config/station.yaml`（也可用环境变量 `STATION_CONFIG` 指定）。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发 > Docker 开发模式",
-"url": "https://github.com/rfs151/ai-scada#docker-开发模式",
-"text": "```bash\nmake dev        # 后端全链路 db/redis/rtu-sim/fep/api（api 热重载）→ http://localhost:18000/docs\nmake web-dev    # 配合 make dev：本机起前端 → http://localhost:5173\nmake up-full    # 生产形态（含网关）→ http://localhost:18088\nmake ps         # 容器状态\nmake logs       # 跟踪日志\nmake down       # 停止（保留数据卷）\nmake clean      # 停止并删除数据卷（清空数据库）\n```\n\n开发编排叠加了 `docker-compose.dev.yml`，网关属于 `full` profile。直接用 `docker compose` 命令时，必须同时带上两个 `-f` 和 `--profile full`，否则会按生产配置重建容器，端口映射和热重载都会变化：\n\n```bash\nalias dc='docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile full'\n\ndc ps                                  # 状态与健康检查\ndc logs -f --tail=200 api              # 单个服务日志：api / fep / rtu-sim / gateway / db / redis\ndc restart fep rtu-sim                 # 重启采集链路\ndc up -d --build api                   # 改代码后重建单个服务\ndc exec db psql -U scada -d scada      # 连接数据库\ndc exec redis redis-cli                # 连接实时库\ndocker stats --no-stream               # 资源占用\ndocker image prune -f && docker builder prune -f   # 清理旧镜像和构建缓存\n```\n\n数据库备份与恢复命令与生产相同，见 [日常运维](#8-日常运维)（命令前缀换成 `dc`）。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发 > 测试与工具",
-"url": "https://github.com/rfs151/ai-scada#测试与工具",
-"text": "```bash\nmake test       # 规约栈/仿真/前置/api 的 pytest + 前端 vitest\nmake lint       # ruff + vue-tsc\nmake points     # 导出点表 docs/点表.csv\nmake help       # 列出全部命令\n```",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 本地开发 > 开发端口",
-"url": "https://github.com/rfs151/ai-scada#开发端口",
-"text": "只绑定 127.0.0.1，可在 `.env` 修改。\n\n| 端口 | 服务 | 说明 |\n|---|---|---|\n| 5173 | 前端 Vite | 本机开发模式 / `make web-dev` |\n| 18088 | 网关 | Docker 开发模式的完整页面 |\n| 18000 | api | `/docs` 为 OpenAPI 文档；两种模式相同 |\n| 2404 | 仿真子站 104 | 本机开发模式，监听 0.0.0.0，Windows 上的 104 调试工具可直接连接 |\n| 12404 | 仿真子站 104 | Docker 开发模式，映射容器内 2404 |\n| 5432 / 6379 | 数据库 / Redis | 本机调试 |\n\nWSL mirrored 网络模式下，Windows 占用了 8000/8080/18080，所以开发端口避开了这几个。国内构建镜像时，可在 `.env` 设 `PIP_INDEX_URL`、`NPM_REGISTRY` 使用国内镜像源。\n\n---",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署",
-"url": "https://github.com/rfs151/ai-scada#docker-部署",
-"text": "生产部署只需要一台装了 Docker 的 Linux 服务器。镜像在服务器上从源码构建，不依赖镜像仓库。以下以 Ubuntu 24.04 为例。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 1. 服务器要求",
-"url": "https://github.com/rfs151/ai-scada#1-服务器要求",
-"text": "- 2 核 2 GB 内存以上（全部容器常驻约 300 MB，compose 里各容器内存上限合计约 2.5 GB），磁盘 10 GB 以上\n- 开放一个对外端口：默认 80/443；被占用时可改用其他端口，例如 8088\n- 有域名时可自动申请 HTTPS 证书；没有域名时只提供 HTTP",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 2. 安装 Docker",
-"url": "https://github.com/rfs151/ai-scada#2-安装-docker",
-"text": "```bash\n# Ubuntu 24.04 官方源自带 docker.io 和 compose 插件\napt-get update\napt-get install -y docker.io docker-compose-v2\nsystemctl enable --now docker\ndocker --version && docker compose version\n```\n\n也可以按 Docker 官方文档安装 Docker CE。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 3. 获取源码",
-"url": "https://github.com/rfs151/ai-scada#3-获取源码",
-"text": "```bash\nmkdir -p /opt/ai-scada && cd /opt/ai-scada\n\n# 方式一：仓库可访问时直接克隆\ngit clone https://github.com/rfs151/ai-scada.git .\n\n# 方式二：私有仓库或服务器无法访问 GitHub 时，在本机打包上传\n#   本机：git ls-files -z | tar --null -czf ai-scada.tgz -T -\n#         scp ai-scada.tgz root@<服务器IP>:/tmp/\n#   服务器：tar -xzf /tmp/ai-scada.tgz -C /opt/ai-scada\n```",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 4. 配置 `.env`",
-"url": "https://github.com/rfs151/ai-scada#4-配置-env",
-"text": "在 `/opt/ai-scada/.env` 写入以下配置（参考 `.env.example`）。数据库口令和 JWT 密钥建议在服务器上随机生成：\n\n```bash\ncd /opt/ai-scada\ncat > .env <<EOF\n# 站点地址：:80 只走 HTTP；填域名（如 scada.example.com）则由 Caddy 自动申请 HTTPS 证书\nSITE_ADDRESS=:80\n# 宿主机端口：80/443 被其他服务占用时改成其他端口\nHTTP_PORT=80\nHTTPS_PORT=443\n\n# 镜像名前缀与标签（在服务器上构建时随意命名即可）\nIMAGE_PREFIX=ai-scada\nIMAGE_TAG=prod\n\nPOSTGRES_USER=scada\nPOSTGRES_PASSWORD=$(openssl rand -hex 16)\nPOSTGRES_DB=scada\nJWT_SECRET=$(openssl rand -hex 32)\n\n# 公开演示：登录框列出演示账号；正式使用设为 false 并修改口令\nDEMO_MODE=true\nDEMO_PASSWORD=scada@2024\n# 自动恢复正常运行方式的间隔（分钟），0 关闭\nAUTO_RESET_MIN=60\n# 仿真倍速：60 表示 24 分钟 = 1 个仿真日\nSIM_SPEED=60\n\n# 构建镜像用的国内镜像源（海外服务器留空）\nPIP_INDEX_URL=\nNPM_REGISTRY=\n\n# 可选：事故简报由大模型撰写\nANTHROPIC_API_KEY=\nBRIEF_MODEL=claude-opus-5-5\nEOF\nchmod 600 .env\n```\n\n| 变量 | 说明 |\n|---|---|\n| `SITE_ADDRESS` | `:80` 只提供 HTTP；填域名时，域名要先解析到服务器，且 80/443 能从公网访问（证书签发要通过 80 端口验证） |\n| `HTTP_PORT` / `HTTPS_PORT` | 网关映射到宿主机的端口 |\n| `POSTGRES_PASSWORD` / `JWT_SECRET` | 必须修改；JWT 密钥变更后已登录用户需重新登录 |\n| `DEMO_MODE` / `DEMO_PASSWORD` | 演示账号开关与口令 |\n| `AUTO_RESET_MIN` | 公开演示站自动复位间隔；有人操作时推迟到空闲 10 分钟后 |\n| `SIM_SPEED` | 子站和 api 共用，报表与负荷预测据此换算仿真钟点 |\n| `PIP_INDEX_URL` / `NPM_REGISTRY` | 国内服务器构建时使用，例如 `https://pypi.tuna.tsinghua.edu.cn/simple`、`https://registry.npmmirror.com` |\n| `ANTHROPIC_API_KEY` / `BRIEF_MODEL` | 留空则事故简报只用规则模板 |",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 5. 构建并启动",
-"url": "https://github.com/rfs151/ai-scada#5-构建并启动",
-"text": "```bash\ncd /opt/ai-scada\ndocker compose build            # 构建 rtu-sim / fep / api / gateway 四个镜像，首次约 5~10 分钟\ndocker compose up -d            # 启动全部 6 个容器\ndocker compose ps               # db、redis、api、rtu-sim 应显示 healthy\n```\n\n服务器在国内、构建时下载依赖超时，可以在 `.env` 配置镜像源，或者让构建走代理：\n\n```bash\ndocker build --network host \\\n  --build-arg HTTPS_PROXY=http://127.0.0.1:<代理端口> --build-arg HTTP_PROXY=http://127.0.0.1:<代理端口> \\\n  -f services/api/Dockerfile -t ai-scada-api:prod .\n```",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 6. 验证",
-"url": "https://github.com/rfs151/ai-scada#6-验证",
-"text": "```bash\ncurl -s http://127.0.0.1:${HTTP_PORT:-80}/api/health | head -c 300   # status 应为 ok\ndocker compose logs --tail=50 fep                                      # 应看到 104 建链、对时、总召\n```\n\n浏览器打开 `http://<服务器IP>:<HTTP_PORT>`：\n\n- 右上角显示\"实时链路正常\"\n- 接线图数值每秒刷新\n- 系统状态页 5 个组件均为\"运行\"\n\n数据库首次启动时自动执行迁移、同步点表、创建演示账号。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 7. 防火墙",
-"url": "https://github.com/rfs151/ai-scada#7-防火墙",
-"text": "- 只需要对外开放网关端口。数据库、Redis、104 端口都只在 compose 内网，生产 compose 不映射到宿主机。\n- 注意：Docker 发布的端口会绕过 ufw 规则。只要映射了宿主机端口，就对公网开放，不需要另加 ufw 规则。不想对外开放时，在 compose 里改成 `127.0.0.1:端口:80` 的形式。\n- 云服务器还要检查云厂商的安全组。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 8. 日常运维",
-"url": "https://github.com/rfs151/ai-scada#8-日常运维",
-"text": "```bash\ncd /opt/ai-scada\ndocker compose ps                         # 状态\ndocker compose logs -f --tail=100 api     # 日志（各容器日志已限制大小并轮转）\ndocker compose restart api                # 重启单个服务\n\n# 更新：上传或拉取新代码后重新构建（.env 和数据卷不受影响）\ngit pull                                  # 或重新上传源码包解压覆盖\ndocker compose build && docker compose up -d\n\n# 备份数据库\ndocker compose exec -T db pg_dump -U scada -Fc scada > scada-$(date +%F).dump\n# 恢复（TimescaleDB 恢复前后需调用 pre/post_restore；先停写库的 api）\ndocker compose stop api\ndocker compose exec -T db psql -U scada -d scada -c \"SELECT timescaledb_pre_restore();\"\ndocker compose exec -T db pg_restore -U scada -d scada --clean --if-exists < scada-2026-10-31.dump\ndocker compose exec -T db psql -U scada -d scada -c \"SELECT timescaledb_post_restore();\"\ndocker compose start api\n\n# 停止（保留数据）/ 彻底删除（含数据卷，不可恢复）\ndocker compose down\ndocker compose down -v\n```\n\n数据保存在 `db-data`（数据库）和 `caddy-data`（证书）两个卷中。历史遥测 30 天后自动删除，3 天后自动压缩，磁盘占用基本稳定。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 9. 与其他服务共用服务器",
-"url": "https://github.com/rfs151/ai-scada#9-与其他服务共用服务器",
-"text": "- **80 端口被占用**：设置 `HTTP_PORT=8088`、`HTTPS_PORT=8443`，用 `http://<IP>:8088` 访问。在线演示站就是这样部署的。\n- **需要 HTTPS 但 80 被占用**：Caddy 证书签发要通过 80 端口验证。可以让占用 80 端口的反向代理把本站域名转发到 8088，或者改用 DNS 验证方式签发证书。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > Docker 部署 > 10. CI 自动部署（可选）",
-"url": "https://github.com/rfs151/ai-scada#10-ci-自动部署可选",
-"text": "`.github/workflows/ci.yml` 已包含\"测试 → 构建镜像推送到 GHCR → SSH 到服务器拉取并重启\"的流程，按需启用：\n\n1. 服务器 `.env` 中设 `IMAGE_PREFIX=ghcr.io/<github用户名小写>/<仓库名小写>`、`IMAGE_TAG=latest`。\n2. GitHub 仓库设置：\n   - Variables：`DEPLOY_ENABLED=true`\n   - Secrets：`VPS_HOST`、`VPS_USER`、`VPS_SSH_KEY`（建议使用专用部署密钥）\n   - GHCR 包设为 public，或在服务器上执行 `docker login ghcr.io`\n3. 推送到 `main` 后，CI 测试通过即自动构建并部署。\n\n---",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "PowerGrid SCADA Demo > 接口",
-"url": "https://github.com/rfs151/ai-scada#接口",
-"text": "完整接口文档见 `http://<地址>/docs`（OpenAPI）。\n\n- `GET /api/health` 就绪探针（数据库、Redis、后台任务状态）· `GET /api/health/live` 存活探针\n- `GET /api/model/station` · `GET /api/model/points?cat=&bay=` 厂站模型与点表\n- `GET /api/realtime?ids=` 实时快照 · `GET /api/history/{点号}?start=&end=` 历史曲线\n- `GET /api/events/yx` SOE · `GET /api/channels` 通道状态 · `GET /api/channels/{通道}/frames?after=` 报文\n- `WS /ws/realtime` 订阅推送（协议见 `services/api/app/routers/realtime.py`），另推送告警、确认、挂牌、遥控进度\n- `POST /api/auth/login` 登录 · `GET /api/auth/me`\n- `GET /api/alarms` 告警查询 · `GET /api/alarms/active` · `POST /api/alarms/ack` 确认\n- `GET /api/control/check` 五防预校验 · `POST /api/control/sessions` 发起遥控，`/{id}/supervise|select|execute|cancel` · `POST /api/control/adjust` 遥调\n- `GET|POST /api/tags` · `DELETE /api/tags/{id}` 挂牌 · `GET /api/audit` 审计（监护员/管理员）\n- `GET /api/sim` 场景与自动装置状态 · `POST /api/sim/inject` 注入场景（需登录）\n- `GET /api/pdr` 事故追忆列表 · `GET /api/pdr/{id}` 回放数据\n- `GET /api/pdr/{id}/brief` 事故简报 · `POST /api/pdr/{id}/brief` 重新生成（`{\"llm\": true}` 由大模型撰写）\n- `GET /api/reports/summary?start=&end=` 运行报表 · `GET /api/reports/export.xlsx` 导出 Excel\n- `GET /api/datacheck` 数据校核断面 · `GET /api/forecast/load` 负荷预测与回测",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 1. 目标与定位",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#1-目标与定位",
-"text": "面向面试展示，5 分钟内让面试官看到两件事：\n\n| 维度 | 体现点 |\n|---|---|\n| **业务知识** | 四遥（遥测/遥信/遥控/遥调）、SOE、选择-返校-执行遥控、五防闭锁、拓扑着色、挂牌、事故追忆、越限告警、品质位、总召唤 |\n| **技术能力** | 真实工业规约（IEC 60870-5-104 / Modbus TCP）、实时数据管道、时序库、WebSocket 推送、SVG 一次接线图、容器化部署、CI/CD、测试 |\n\n核心思路：**不造假数据**。仿真子站用潮流计算产生电气量，经 IEC 104 规约上送；SCADA 主站按真实链路采集、处理、展示、控制。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 2. 总体架构",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#2-总体架构",
-"text": "```\n┌──────────────────── VPS (docker compose) ────────────────────┐\n│  Caddy (HTTPS/反代 + 前端静态) ──► api (FastAPI, REST + WS)    │\n│                                     │   ▲                     │\n│                                     │   │ Redis 实时库/事件总线 │\n│                                     ▼   │                     │\n│                               TimescaleDB   fep (前置采集)     │\n│                                              IEC104/Modbus 主站│\n│                                                  │ ▲          │\n│                                                  ▼ │ 遥控      │\n│                                    rtu-sim (仿真子站)          │\n│                                    pandapower 潮流 + 保护逻辑   │\n└───────────────────────────────────────────────────────────────┘\n```\n\n对应真实调度系统的 **厂站 RTU → 前置 FEP → SCADA 服务器 → HMI** 四层结构。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 3. 技术选型",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#3-技术选型",
-"text": "| 模块 | 选型 | 理由 |\n|---|---|---|\n| 仿真子站 | Python + pandapower + c104(lib60870) + pymodbus | 交流潮流保证功率平衡、电压降符合物理规律 |\n| 前置采集 | Python asyncio + c104 主站 + pymodbus | 规约解析、死区、品质位、变位、时标 |\n| 实时库 | Redis（Hash 实时值 + Stream 事件） | 毫秒级读写，相当于传统实时库 |\n| 历史库 | TimescaleDB | hypertable、连续聚合、压缩；同时存关系模型 |\n| 后端 | FastAPI + SQLAlchemy 2 + Pydantic v2 | 异步、OpenAPI 自文档 |\n| 前端 | Vue 3 + TS + Vite + Pinia + Naive UI + ECharts | 一次接线图为 SVG 自绘图元 |\n| 网关 | Caddy | 自动 HTTPS |\n| 部署 | docker compose + GitHub Actions → GHCR → VPS | |\n| 测试 | pytest / Vitest / Playwright | |",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 4. 电网模型",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#4-电网模型",
-"text": "110kV 内桥接线（2 回进线、2 台 50MVA 主变）+ 10kV 单母分段（F01 工业、F02 居民、F03 商业、F04 光伏、C1 电容器、分段开关）。\n\n- 设备：断路器、隔离刀闸、接地刀闸、主变（OLTC 档位）、PT/CT、电容器、光伏\n- 典型日负荷曲线 + 随机扰动，光伏按日照曲线；支持加速时钟\n- 模型命名参照 **IEC 61970 CIM**（Substation / VoltageLevel / Bay / Breaker / Disconnector / ConnectivityNode / Analog / Discrete）\n\n| 类型 | 104 类型标识 | 示例 |\n|---|---|---|\n| 遥测 | M_ME_NC_1 / M_ME_TF_1 | 母线电压、线路 P/Q/I/cosφ、油温、频率 |\n| 遥信（双点） | M_DP_TB_1 | 断路器/刀闸位置 |\n| 遥信（单点） | M_SP_TB_1 | 保护动作、重合闸、事故总、SF6 低气压 |\n| 遥控 | C_DC_NA_1（SBO） | 断路器分合 |\n| 遥调 | C_RC_NA_1 / C_SE_NC_1 | 主变升降档、光伏有功设定 |\n| 电度 | M_IT_NA_1 | 正/反向有功电量 |",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 5. 功能模块",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#5-功能模块",
-"text": "1. **数据采集**：STARTDT、总召唤、时钟同步、电度召唤、k/w 窗口、t1/t2/t3；品质位 IV/NT/SB/OV；死区；通道监视；**报文监视窗口**；Modbus 接入逆变器\n2. **实时处理**：四级限值 + 回差越限告警；事故变位/正常变位区分；SOE 按设备时标（ms）排序；计算量；人工置数/封锁\n3. **一次接线图**：SVG 图元库；电源点 BFS 拓扑着色（按电压等级配色、停电灰、接地标识）；潮流箭头；挂牌；品质可视化\n4. **遥控与五防**：选择-返校-执行（超时撤销）、双人监护、可配置五防规则、审计日志\n5. **告警与事件**：分级告警窗、音响/闪烁/确认、光字牌、**事故追忆 PDR 回放**\n6. **历史与报表**：趋势、日负荷曲线、电压合格率、主变负载率、Excel 导出\n7. **故障注入面板**：瞬时故障重合成功、永久故障后加速、主变跳闸备自投、光伏电压越限调档、通道中断\n8. **AI 增强（可选）**：负荷预测（LightGBM）、遥测异常检测、告警根因归并 / LLM 事故简报",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 6. 目录结构",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#6-目录结构",
-"text": "```\nai-scada/\n├── docker-compose.yml / docker-compose.dev.yml / .env.example / Makefile\n├── deploy/            Caddyfile、db/init.sql\n├── services/\n│   ├── rtu-sim/       仿真子站（P1）\n│   ├── fep/           前置采集（P1）\n│   └── api/           SCADA 服务 + REST/WS\n├── web/               Vue3 前端\n├── config/            points.yaml 点表（单一事实来源）、interlock.yaml 五防规则\n├── docs/\n└── .github/workflows/\n```",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 7. 数据库要点",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#7-数据库要点",
-"text": "模型表（substation / voltage_level / bay / equipment / measurement）；时序 `analog_history` hypertable + 15min 连续聚合 + 7 天压缩；事件表 `soe`(device_ts, recv_ts)、`alarm`、`control_log`、`pdr_snapshot`、`tag`。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 8. 实时链路",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#8-实时链路",
-"text": "rtu-sim →104→ fep →(死区/品质)→ Redis HSET + XADD → api（告警/SOE 处理，批量 COPY 写库）→ WebSocket 按画面订阅、100ms 合帧增量推送。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 9. 安全",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#9-安全",
-"text": "JWT + RBAC（访客只读 / 调度员 / 监护员 / 管理员）；场景每小时自动重置；遥控限流 + 审计；VPS 只开 80/443，104 端口只在内网（对应\"安全分区\"）。",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 10. 里程碑",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#10-里程碑",
-"text": "| 阶段 | 内容 |\n|---|---|\n| **P0 骨架** | 仓库、compose、Caddy、CI、前后端联通，部署到 VPS |\n| **P1 数据链路** | 电网模型 + 潮流、104 主从站、Redis、Timescale、WS 推送 |\n| **P2 HMI** | SVG 图元、接线图、拓扑着色、趋势 |\n| **P3 业务** | 越限/变位/SOE/告警、遥控 SBO、五防、挂牌、审计 |\n| **P4 场景** | 保护、重合闸、备自投、故障注入、PDR 回放 |\n| **P5 打磨** | 报表、报文监视、访客模式、自动重置、README、演示视频 |\n| P6 可选 | 负荷预测、异常检测、LLM 事故简报 |",
-"part": 0
-},
-{
-"project": "scada",
-"source": "docs",
-"title": "电力 SCADA 演示系统开发方案（PowerGrid SCADA Demo） > 11. 5 分钟演示脚本",
-"url": "https://github.com/rfs151/ai-scada/blob/main/docs/开发方案.md#11-5-分钟演示脚本",
-"text": "1. 架构图：四层结构、真实 104 规约\n2. 接线图：拓扑着色、潮流、负荷曲线\n3. 注入 F02 永久故障：SOE 毫秒序列 → 告警 → 线路变灰 → PDR 回放\n4. 遥控：先演示五防拒绝，再走选择→返校→监护→执行\n5. 报文监视：104 报文解析\n6. 部署与 CI",
+"title": "ai-agent · 作品集 AI 助手 > 费用",
+"url": "https://github.com/rfs151/ai-agent#费用",
+"text": "DeepSeek `deepseek-flash` 价格（元 / 百万 token，高峰时段；非高峰减半）：缓存命中 0.04，未命中 2，输出 8。\n普通问题调用模型 3 次（路由 + 工具 + 回答），JD 匹配 4 次，联系方式 1 次；系统提示词约 1 万 token 基本都命中缓存，**每问约 0.001～0.03 元**（实测：问答 0.006～0.025，JD 匹配 0.018，联系方式 0.001）。页面上每个回答都显示实际费用。",
 "part": 0
 }
 ]

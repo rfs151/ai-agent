@@ -30,4 +30,4 @@
 ## 关键数据
 - 144 项单元测试（控制算法 91、点位编解码 23、规则 30），可在 ASan / UBSan 下运行；mFRR 轨迹、叠加交接、FCR/LFSM-O 曲线用表驱动测试覆盖。
 - 云端下发指令往返约 50 ms（本机实测）。
-- 技术栈：C99、pthread、libmodbus、SQLite WAL、libmosquitto（MQTT TLS）、TinyExpr、lib60870-C（IEC 104 子站，可接入 ai-scada）、OpenSSL RSA-2048 + SHA256 固件验签、FastAPI、Vue。
+- 技术栈：C99、pthread、libmodbus、SQLite WAL、libmosquitto（MQTT TLS）、TinyExpr、lib60870-C（IEC 104 子站）、OpenSSL RSA-2048 + SHA256 固件验签、FastAPI、Vue。

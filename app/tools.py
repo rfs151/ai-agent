@@ -9,9 +9,9 @@ import httpx
 from app.config import settings
 from app.search import Embedder, Index, tokens
 
-PROJECTS = ["vision", "qt", "ems", "cam", "gvtest", "medlens", "scada", "agent"]
+PROJECTS = ["vision", "qt", "ems", "cam", "gvtest", "medlens", "agent"]
 NAMES = {"vision": "ai-vision", "qt": "Qt 拓扑监控上位机", "ems": "储能 EMS", "cam": "工业相机采集",
-         "gvtest": "GVTest", "medlens": "MedLens", "scada": "PowerGrid SCADA", "agent": "作品集 AI 助手"}
+         "gvtest": "GVTest", "medlens": "MedLens", "agent": "作品集 AI 助手"}
 # How much of each hit the model sees. Tool results are new input every time, so they are most of
 # the cache-miss tokens (61% of the cost). Write-ups are short and dense: kept whole. Doc sections
 # are cut to the window that matches the query best (most sections are shorter than this anyway).
@@ -20,7 +20,7 @@ WRITEUP_MAX = 900
 # The domain has no ICP filing (blocked in China): demo links in the docs become IP:port, the same
 # rule the homepage uses for its "进入" buttons when opened by IP.
 PUBLIC = "http://47.117.29.74"
-PORTS = {"vision": 8090, "qt": 8080, "ems": 8095, "cam": 8098, "gvtest": 8097, "medlens": 8010, "scada": 8088}
+PORTS = {"vision": 8090, "qt": 8080, "ems": 8095, "cam": 8098, "gvtest": 8097, "medlens": 8010}
 _DOMAIN = re.compile(r"https?://(?:(\w+)\.)?edgebot\.vip(?::\d+)?")
 
 

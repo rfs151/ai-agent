@@ -60,7 +60,6 @@ class Settings:
         "cam": "http://127.0.0.1:8098/api/health",
         "gvtest": "http://127.0.0.1:8097/healthz",
         "medlens": "http://127.0.0.1:8010/api/health",
-        "scada": "http://127.0.0.1:8088/api/health",
     }
     vision_api = os.getenv("VISION_API", "http://127.0.0.1:8090")
 
