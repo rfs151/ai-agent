@@ -1,0 +1,25 @@
+# ai-agent：作品集 AI 助手。网关把 edgebot.vip/agent/* 转发到 127.0.0.1:8099。
+#   cp .env.example .env && vi .env      # 至少填 DEEPSEEK_API_KEY
+#   docker compose up -d --build
+# network_mode host：实时工具要访问本机各项目的健康检查（127.0.0.1:8080/8090/...）。
+services:
+  agent:
+    build:
+      context: .
+      network: host
+      args:
+        REGISTRY: "${REGISTRY:-docker.io}"
+        PIP_INDEX: "${PIP_INDEX:-https://pypi.org/simple}"
+    image: ai-agent:latest
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}      # 每日额度按北京时间零点重置
+    volumes:
+      - ./data:/app/data          # 对话记录、限流计数（SQLite）
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
